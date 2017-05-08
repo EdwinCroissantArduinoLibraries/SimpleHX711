@@ -1,6 +1,6 @@
 #ifndef SIMPLEHX711_H
 #define SIMPLEHX711_H
-#define SIMPLEHX711LIBVERSION "0.0.1"
+#define SIMPLEHX711LIBVERSION "0.0.2"
 
 /*
  * HX711 24-Bit Analog-to-Digital Converter for Bridge Sensors library
@@ -22,6 +22,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * See the README.md file for additional information.
+ * Revisions:
+ * 08may2017 added getTimestamp and removed the 256 divisor in raw values
  */
 
 #include "Arduino.h"
@@ -43,6 +45,7 @@ public:
 	gain getGain();
 	void setAlpha(uint8_t alpha);
 	uint8_t getAlpha();
+	uint32_t getTimestamp();
 	int32_t getRaw(bool smoothed = false);
 	void tare(bool smoothed = false);
 	void setTare(int32_t tare);
@@ -63,10 +66,11 @@ private:
 	gain _gain;
 	int32_t _tare;
 	uint8_t _alpha;
+	uint32_t _timestamp;
 	int32_t _raw;
 	int32_t _smoothedRaw;
 	int32_t _adjuster;
-	uint32_t _endingTime;
+	uint32_t _conversionStartTime;
 	status _status;
 	uint8_t _readCount;
 	uint8_t _readsUntilValid;

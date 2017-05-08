@@ -115,7 +115,9 @@ void outputScale() {
 		Serial.println(F("Scale initializing"));
 		break;
 	case SimpleHX711::valid:
-		if (Verbose) sprintf(buff,"%10ld %10ld %10ld %10ld %10ld %10ld",
+		if (Verbose)
+			sprintf(buff, "%10ld %10ld %10ld %10ld %10ld %10ld %10ld",
+					scale.getTimestamp(),
 				scale.getRaw(),
 				scale.getRaw(true),
 				scale.getRawMinusTare(true),

@@ -25,10 +25,11 @@ SimpleHX711::SimpleHX711(const uint8_t pinClk, const uint8_t pinData,
 	_smoothedRaw = 0;
 	_alpha = 200;
 	_adjuster = 256;
-	_endingTime = millis();
+	_conversionStartTime = millis();
 	_readCount = 0;
 	_status = init;
 	_readsUntilValid = readsUntilValid;
+	_timestamp = 0;
 }
 
 /*
@@ -55,7 +56,7 @@ bool SimpleHX711::read() {
 		 * a time out after 500 ms
 		 *
 		 */
-		if ((millis() - _endingTime) >= 500) {
+		if ((millis() - _conversionStartTime) >= 500) {
 			_status = timedOut;
 			return true;
 		} else
@@ -71,9 +72,12 @@ bool SimpleHX711::read() {
 	}
 
 	/*
+	 * copy the conversion start time into the timestamp and
 	 * read the 24 bits and put them in the MSB's of the 32 bit variable
 	 * effectively multiplying it by 256
 	 */
+	_timestamp = _conversionStartTime;
+
 	for (j = 3; j > 0; --j) {
 		for (i = 0; i < 8; ++i) {
 			digitalWrite(_pinClk, HIGH);
@@ -117,7 +121,7 @@ bool SimpleHX711::read() {
 	/*
 	 * save the time for timedOut
 	 */
-	_endingTime = millis();
+	_conversionStartTime = millis();
 	/*
 	 * the amount of reads before a stable output depends
 	 * on the gain
@@ -189,12 +193,21 @@ uint8_t SimpleHX711::getAlpha() {
 }
 
 /*
- * returns the raw 24 bit reading from the sensor
+ * returns the timestamp in millis from the current reading
+ * the timestamp is taken at the start of the conversion
+ */
+
+uint32_t SimpleHX711::getTimestamp() {
+	return _timestamp;
+}
+
+/*
+ * returns the raw 32 bit reading from the sensor
  * the boolean smoothed is optional and defaults to false
  */
 
 int32_t SimpleHX711::getRaw(bool smoothed) {
-	return smoothed ? _smoothedRaw / 256 : _raw / 256;
+	return smoothed ? _smoothedRaw : _raw;
 }
 
 /*
@@ -206,7 +219,7 @@ void SimpleHX711::tare(bool smoothed) {
 }
 
 /*
- * sets the value of the adjuster
+ * sets the value of the tare
  */
 void SimpleHX711::setTare(int32_t tare) {
 	_tare = tare;
@@ -220,11 +233,11 @@ int32_t SimpleHX711::getTare() {
 }
 
 /*
- * returns the raw 24 bits reading form the chip
+ * returns the raw 32 bits reading form the chip minus the tare
  * the boolean smoothed is optional and defaults to false
  */
 int32_t SimpleHX711::getRawMinusTare(bool smoothed) {
-	return smoothed ? (_smoothedRaw - _tare) / 256 : (_raw - _tare) / 256;
+	return smoothed ? (_smoothedRaw - _tare) : (_raw - _tare);
 }
 
 /*
@@ -282,7 +295,7 @@ void SimpleHX711::powerUp() {
 	_status = init;
 	_readCount = 0;
 	// prevent timeout
-	_endingTime = millis();
+	_conversionStartTime = millis();
 }
 
 /*
